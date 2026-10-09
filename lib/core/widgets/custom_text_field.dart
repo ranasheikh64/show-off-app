@@ -132,7 +132,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     children: [
                       Icon(Icons.error_outline, color: AppTheme.errorRed, size: 14.sp),
                       SizedBox(width: 4.w),
-                      Text(widget.errorText!, style: TextStyle(color: AppTheme.errorRed, fontSize: 12.sp)),
+                      Expanded(
+                        child: Text(widget.errorText!, style: TextStyle(color: AppTheme.errorRed, fontSize: 12.sp)),
+                      ),
                     ],
                   )
                 : null,
