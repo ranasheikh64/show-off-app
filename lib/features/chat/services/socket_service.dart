@@ -12,7 +12,8 @@ class SocketService {
     if (token == null) return;
 
     _socket = IO.io(ApiUrl.socketUrl, IO.OptionBuilder()
-        .setTransports(['websocket'])
+        .setTransports(['websocket', 'polling'])
+        .setPath('/showoff/socket.io')
         .setExtraHeaders({'Authorization': 'Bearer $token'})
         .build());
 
