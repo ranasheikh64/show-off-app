@@ -12,7 +12,8 @@ class SocketService {
     if (token == null) return;
 
     _socket = IO.io(ApiUrl.socketUrl, IO.OptionBuilder()
-        .setPath('/showoff/socket.io')
+        .setPath('/showoff/api/stream')
+        .setTransports(['polling']) // Force polling
         .setExtraHeaders({'Authorization': 'Bearer $token'})
         .build());
 
