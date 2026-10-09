@@ -6,7 +6,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../auth/models/user_model.dart';
 import 'edit_profile_screen.dart';
-
+import 'privacy_policy_screen.dart';
+import 'help_support_screen.dart';
+import 'about_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
@@ -380,8 +382,10 @@ class _ProfileView extends StatelessWidget {
               _menuDivider(),
               _menuTile(
                 icon: Icons.lock_outline_rounded,
-                label: 'Privacy & Security',
-                onTap: () {},
+                label: 'Privacy Policy',
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+                },
               ),
               _menuDivider(),
               _menuTile(
@@ -407,13 +411,17 @@ class _ProfileView extends StatelessWidget {
               _menuTile(
                 icon: Icons.help_outline_rounded,
                 label: 'Help & Support',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()));
+                },
               ),
               _menuDivider(),
               _menuTile(
                 icon: Icons.info_outline_rounded,
                 label: 'About Show Off',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()));
+                },
               ),
             ],
           ),

@@ -55,11 +55,13 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
 
   bool _onScrollNotification(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
-    if (n is ScrollStartNotification || n is ScrollUpdateNotification) {
-      _fabVisible.value = false;
-    } else if (n is ScrollEndNotification) {
-      _fabVisible.value = true;
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (n is ScrollStartNotification || n is ScrollUpdateNotification) {
+        if (_fabVisible.value) _fabVisible.value = false;
+      } else if (n is ScrollEndNotification) {
+        if (!_fabVisible.value) _fabVisible.value = true;
+      }
+    });
     return false;
   }
 

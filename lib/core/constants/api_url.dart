@@ -16,6 +16,7 @@ class ApiUrl {
 
   // User endpoints
   static const String updateProfile = '$baseUrl/users/profile';
+  static const String updateFcmToken = '$baseUrl/users/fcm-token';
   static const String discoverUsers = '$baseUrl/users/discover';
   static const String searchUsers = '$baseUrl/users/search';
 

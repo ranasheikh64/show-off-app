@@ -8,6 +8,8 @@ import '../services/auth_service.dart';
 import '../../../core/constants/api_url.dart';
 import '../../../core/network/dio_client.dart';
 import '../../chat/services/socket_service.dart';
+import '../../../core/services/push_notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = AuthService();
@@ -19,6 +21,13 @@ class AuthController extends GetxController {
   void onInit() {
     super.onInit();
     _loadUserFromHive();
+    
+    // Listen for FCM token changes (e.g. when the token expires and is refreshed)
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      if (currentUser.value != null) {
+        _sendTokenToBackend(newToken);
+      }
+    });
   }
 
   void _loadUserFromHive() async {
@@ -30,9 +39,29 @@ class AuthController extends GetxController {
         final freshUser = await _authService.getProfile();
         currentUser.value = freshUser;
         await HiveService.saveUser(freshUser.toJson());
+        _updateFcmToken();
       } catch (e) {
         debugPrint('Failed to fetch fresh profile: $e');
       }
+    }
+  }
+
+  Future<void> _updateFcmToken() async {
+    try {
+      final token = await PushNotificationService.getToken();
+      if (token != null) {
+        await _sendTokenToBackend(token);
+      }
+    } catch (e) {
+      debugPrint('Failed to get FCM token: $e');
+    }
+  }
+
+  Future<void> _sendTokenToBackend(String token) async {
+    try {
+      await DioClient.instance.put(ApiUrl.updateFcmToken, data: {'fcmToken': token});
+    } catch (e) {
+      debugPrint('Failed to send FCM token to backend: $e');
     }
   }
 
@@ -61,6 +90,8 @@ class AuthController extends GetxController {
       await HiveService.saveToken(token);
       await HiveService.saveUser(data['user']);
       currentUser.value = user;
+      
+      _updateFcmToken();
       
       if (context.mounted) context.go('/home'); // Replace with actual home route later
     } catch (e) {

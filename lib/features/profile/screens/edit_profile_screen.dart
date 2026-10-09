@@ -153,12 +153,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final data = <String, dynamic>{'name': _nameController.text.trim()};
     if (age != null) data['age'] = age;
     if (_gender != null) data['gender'] = _gender;
-    if (_educationController.text.isNotEmpty)
+    if (_educationController.text.isNotEmpty) {
       data['education'] = _educationController.text.trim();
+    }
     if (_petLover != null) data['petLover'] = _petLover;
     if (_selectedPassions.isNotEmpty) data['passion'] = _selectedPassions;
-    if (_selectedLookingFor.isNotEmpty)
+    if (_selectedLookingFor.isNotEmpty) {
       data['preferences'] = _selectedLookingFor;
+    }
 
     _authCtrl.updateProfile(data, context, imagePath: _imageFile?.path);
   }
