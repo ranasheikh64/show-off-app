@@ -9,7 +9,8 @@ import '../controllers/auth_controller.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
-  const ResetPasswordScreen({super.key, required this.email});
+  final String otp;
+  const ResetPasswordScreen({super.key, required this.email, required this.otp});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -27,7 +28,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match'), backgroundColor: Colors.red));
         return;
       }
-      _authCtrl.resetPassword(widget.email, _passCtrl.text.trim(), context);
+      _authCtrl.resetPassword(widget.email, widget.otp, _passCtrl.text.trim(), context);
     }
   }
 

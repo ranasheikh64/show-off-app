@@ -12,21 +12,27 @@ class SocketService {
     if (token == null) return;
 
     _socket = IO.io(ApiUrl.socketUrl, IO.OptionBuilder()
-        .setPath('/showoff/api/stream')
-        .setTransports(['polling']) // Force polling
+        .setTransports(['websocket', 'polling'])
         .setExtraHeaders({'Authorization': 'Bearer $token'})
         .build());
 
     _socket?.onConnect((_) {
-      print('Socket Connected');
+      print('=== Socket Connected ===');
     });
 
     _socket?.onDisconnect((_) {
-      print('Socket Disconnected');
+      print('=== Socket Disconnected ===');
     });
 
     _socket?.onConnectError((err) {
-      print('Socket Connect Error: $err');
+      print('=== Socket Connect Error ===');
+      print('Error details: $err');
+      print('Attempted URL: ${ApiUrl.socketUrl}');
+    });
+
+    _socket?.onError((err) {
+      print('=== Socket General Error ===');
+      print('Error details: $err');
     });
   }
 

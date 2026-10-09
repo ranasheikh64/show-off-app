@@ -4,8 +4,8 @@ import '../storage/hive_service.dart';
 class DioClient {
   static final Dio _dio = Dio(
     BaseOptions(
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 120),
+      receiveTimeout: const Duration(seconds: 120),
       headers: {
         'Content-Type': 'application/json',
       },

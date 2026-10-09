@@ -135,7 +135,7 @@ class AuthController extends GetxController {
       isLoading.value = true;
       await _authService.verifyOtp(email, otp);
       if (context.mounted) {
-        context.push('/reset-password', extra: email);
+        context.push('/reset-password', extra: {'email': email, 'otp': otp});
       }
     } catch (e) {
       String errorMessage = e.toString();
@@ -148,10 +148,10 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> resetPassword(String email, String newPassword, BuildContext context) async {
+  Future<void> resetPassword(String email, String otp, String newPassword, BuildContext context) async {
     try {
       isLoading.value = true;
-      await _authService.resetPassword(email, newPassword);
+      await _authService.resetPassword(email, otp, newPassword);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password Reset Successful'), backgroundColor: Colors.green));
         context.go('/login');

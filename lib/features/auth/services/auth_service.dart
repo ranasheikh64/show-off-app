@@ -27,9 +27,10 @@ class AuthService {
     await _dio.post(ApiUrl.verifyOtp, data: {'email': email, 'otp': otp});
   }
 
-  Future<void> resetPassword(String email, String newPassword) async {
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
     await _dio.post(ApiUrl.resetPassword, data: {
       'email': email,
+      'otp': otp,
       'newPassword': newPassword,
     });
   }

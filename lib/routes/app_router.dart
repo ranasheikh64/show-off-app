@@ -52,8 +52,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/reset-password',
-      builder: (context, state) =>
-          ResetPasswordScreen(email: state.extra as String? ?? ''),
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>? ?? {};
+        return ResetPasswordScreen(
+          email: args['email'] ?? '',
+          otp: args['otp'] ?? '',
+        );
+      },
     ),
     GoRoute(
       path: '/home',

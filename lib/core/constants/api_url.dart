@@ -1,11 +1,11 @@
 class ApiUrl {
   // Adjust base url according to physical device or emulator
-  static const String baseUrl =
-      'https://nazrul-academy-alumni.com/showoff/api';
-  static const String socketUrl = 'https://nazrul-academy-alumni.com';
+  // static const String baseUrl =
+  //     'https://nazrul-academy-alumni.com/showoff/api';
+  // static const String socketUrl = 'https://nazrul-academy-alumni.com';
 
-  // static const String baseUrl = 'http://192.168.10.121:5000/api'; // Local IP for physical device
-  // static const String socketUrl = 'http://192.168.10.121:5000';
+  static const String baseUrl = 'https://show-off-gamma.vercel.app/api';
+  static const String socketUrl = 'https://show-off-gamma.vercel.app';
 
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
