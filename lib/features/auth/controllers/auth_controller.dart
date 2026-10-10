@@ -253,6 +253,38 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> deleteAccount(BuildContext context) async {
+    try {
+      isLoading.value = true;
+      await DioClient.instance.delete(ApiUrl.deleteAccount);
+      
+      // Cleanup locally
+      await HiveService.clearAuth();
+      currentUser.value = null;
+      try {
+        SocketService.disconnect();
+      } catch (_) {}
+      
+      Get.deleteAll(force: true);
+      Get.put(AuthController(), permanent: true);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account deleted successfully'), backgroundColor: Colors.green),
+        );
+        context.go('/login');
+      }
+    } catch (e) {
+      String errorMessage = e.toString();
+      if (e is DioException && e.response?.data is Map) {
+        errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
+      }
+      _showError(context, errorMessage);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   void _showError(BuildContext context, String message) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

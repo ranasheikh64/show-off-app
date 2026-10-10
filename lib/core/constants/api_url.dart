@@ -19,6 +19,7 @@ class ApiUrl {
   static const String updateFcmToken = '$baseUrl/users/fcm-token';
   static const String discoverUsers = '$baseUrl/users/discover';
   static const String searchUsers = '$baseUrl/users/search';
+  static const String deleteAccount = '$baseUrl/users/me';
 
   // Chat endpoints
   static const String fetchChats = '$baseUrl/chats';
