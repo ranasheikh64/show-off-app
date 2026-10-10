@@ -233,6 +233,22 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<bool> acceptPrivacyPolicy() async {
+    try {
+      final res = await DioClient.instance.put(ApiUrl.acceptPrivacyPolicy);
+      if (res.data['success'] == true) {
+        final updatedUser = UserModel.fromJson(res.data['user']);
+        currentUser.value = updatedUser;
+        await HiveService.saveUser(updatedUser.toJson());
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Failed to accept privacy policy: $e');
+      return false;
+    }
+  }
+
   Future<void> logout(BuildContext context) async {
     await HiveService.clearAuth();
     currentUser.value = null;

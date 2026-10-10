@@ -62,6 +62,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
           'Messages',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.group_add_outlined),
+            onPressed: () {
+              _showCreateGroupBottomSheet(context);
+            },
+          ),
+        ],
         backgroundColor: const Color(0xFF0B0C1F),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -440,19 +448,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 CircleAvatar(
                   radius: 26.r,
                   backgroundColor: const Color(0xFF91A3F4), // Light blue-purple
-                  backgroundImage: (otherUser?.profileImage != null)
+                  backgroundImage: (!chat.isGroupChat && otherUser?.profileImage != null)
                       ? NetworkImage(otherUser!.profileImage!)
                       : null,
-                  child: (otherUser?.profileImage == null)
-                      ? Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20.sp,
-                          ),
-                        )
-                      : null,
+                  child: chat.isGroupChat
+                      ? Icon(Icons.group, color: Colors.white, size: 28.r)
+                      : (otherUser?.profileImage == null)
+                          ? Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20.sp,
+                              ),
+                            )
+                          : null,
                 ),
                 if (isOnline)
                   Positioned(
@@ -490,6 +500,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (chat.isGroupChat)
+                        Padding(
+                          padding: EdgeInsets.only(left: 4.w),
+                          child: Icon(Icons.group, color: Colors.white54, size: 16.sp),
+                        ),
                       if (chat.isLocked) ...[
                         SizedBox(width: 6.w),
                         Icon(
@@ -640,5 +655,176 @@ class _ChatListScreenState extends State<ChatListScreen> {
       // Older, show date
       return '${localTime.day}/${localTime.month}/${localTime.year.toString().substring(2)}';
     }
+  }
+  void _showCreateGroupBottomSheet(BuildContext context) {
+    // Extract unique users from existing chats
+    final currentUserId = _authCtrl.currentUser.value?.id;
+    final Map<String, dynamic> uniqueUsers = {};
+    for (var chat in _chatCtrl.chats) {
+      if (!chat.isGroupChat) {
+        final otherUser = chat.users.firstWhereOrNull((u) => u.id != currentUserId);
+        if (otherUser != null) {
+          uniqueUsers[otherUser.id] = otherUser;
+        }
+      }
+    }
+    
+    final List<dynamic> availableUsers = uniqueUsers.values.toList();
+    List<String> selectedUserIds = [];
+    final TextEditingController groupNameController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E213A),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85, // limit to 85% of screen height
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16.w,
+                right: 16.w,
+                top: 16.h,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Create Group Chat',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: groupNameController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Group Name',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Select Members',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  if (availableUsers.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      child: const Text(
+                        'No contacts available.',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: availableUsers.length,
+                        itemBuilder: (context, index) {
+                          final user = availableUsers[index];
+                          final isSelected = selectedUserIds.contains(user.id);
+                          return CheckboxListTile(
+                            value: isSelected,
+                            onChanged: (bool? value) {
+                              setModalState(() {
+                                if (value == true) {
+                                  selectedUserIds.add(user.id);
+                                } else {
+                                  selectedUserIds.remove(user.id);
+                                }
+                              });
+                            },
+                            activeColor: AppTheme.primaryBlue,
+                            checkColor: Colors.white,
+                            title: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 16.r,
+                                  backgroundImage: user.profileImage != null
+                                      ? NetworkImage(user.profileImage!)
+                                      : null,
+                                  child: user.profileImage == null
+                                      ? const Icon(Icons.person, size: 16)
+                                      : null,
+                                ),
+                                SizedBox(width: 12.w),
+                                Text(
+                                  user.name ?? 'Unknown',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  SizedBox(height: 16.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selectedUserIds.isEmpty || groupNameController.text.trim().isEmpty
+                          ? null
+                          : () {
+                              Navigator.pop(context);
+                              _chatCtrl.createGroupChat(
+                                groupNameController.text.trim(),
+                                selectedUserIds,
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryBlue,
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Create Group',
+                        style: TextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

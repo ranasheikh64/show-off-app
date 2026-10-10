@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:ui';
 import 'package:go_router/go_router.dart';
 
 import '../controllers/showoff_controller.dart';
@@ -27,11 +28,64 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   bool _showMyPosts = false;
   bool _paginationLocked = false; // throttle pagination
   String _searchQuery = '';
-
+  bool _isPrivacyDialogShowing = false;
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPrivacyPolicy();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _fabVisible.dispose();
+    super.dispose();
+  }
+
+  void _checkPrivacyPolicy() {
+    final user = _authCtrl.currentUser.value;
+    if (user != null && !user.hasAcceptedPrivacyPolicy && !_isPrivacyDialogShowing) {
+      _isPrivacyDialogShowing = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return WillPopScope(
+            onWillPop: () async => false, // Prevent dismissing with back button
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF1E1E2C).withOpacity(0.9),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: const Text(
+                  'Update on Privacy Policy & Terms',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                content: const Text(
+                  'We have updated our Privacy Policy and Terms of Service to include strict content guidelines, zero tolerance for explicit/violent content, and limitation of liability. You must read and accept them to continue using the app.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () async {
+                      await context.push('/profile/privacy-policy');
+                      final updatedUser = _authCtrl.currentUser.value;
+                      if (updatedUser != null && updatedUser.hasAcceptedPrivacyPolicy && mounted) {
+                        Navigator.pop(context); // Close dialog
+                      }
+                    },
+                    child: const Text('Read Policy', style: TextStyle(color: Colors.blueAccent)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
   }
 
   void _onScroll() {
@@ -46,12 +100,7 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _fabVisible.dispose();
-    super.dispose();
-  }
+
 
   bool _onScrollNotification(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
@@ -69,7 +118,10 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(text),
+          behavior: SnackBarBehavior.fixed,
+        ),
       );
   }
 
@@ -235,6 +287,17 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
               onChoose: () => _chooseUser(post.user!.id),
               onMessage: () => _messageUser(post.user!.id, post.user!.name),
               onDelete: () => _confirmDelete(post.id),
+              onReport: () async {
+                final error = await _showOffCtrl.reportPost(post.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error ?? 'Post reported successfully!'),
+                      backgroundColor: error != null ? Colors.redAccent : Colors.green,
+                    ),
+                  );
+                }
+              },
             ),
           );
         },

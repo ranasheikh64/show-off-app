@@ -51,7 +51,7 @@ class _ProfileView extends StatelessWidget {
                   SizedBox(height: 24.h),
                   _buildStatsRow(context, user),
                   SizedBox(height: 32.h),
-                  _buildMenuSection(context, authCtrl),
+                  _buildMenuSection(context, authCtrl, user),
                   SizedBox(height: 40.h),
                 ],
               ),
@@ -354,7 +354,7 @@ class _ProfileView extends StatelessWidget {
     return Container(width: 1, height: 40.h, color: Colors.white12);
   }
 
-  Widget _buildMenuSection(BuildContext context, AuthController authCtrl) {
+  Widget _buildMenuSection(BuildContext context, AuthController authCtrl, UserModel user) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -391,7 +391,13 @@ class _ProfileView extends StatelessWidget {
               _menuTile(
                 icon: Icons.notifications_none_rounded,
                 label: 'Notifications',
-                onTap: () {},
+                trailing: Switch(
+                  value: user.notificationsEnabled,
+                  onChanged: (value) {
+                    authCtrl.updateProfile({'notificationsEnabled': value}, context);
+                  },
+                  activeColor: const Color(0xFFFF4D8D),
+                ),
               ),
             ],
           ),
@@ -596,7 +602,8 @@ class _ProfileView extends StatelessWidget {
   Widget _menuTile({
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
+    Widget? trailing,
   }) {
     return InkWell(
       onTap: onTap,
@@ -624,7 +631,7 @@ class _ProfileView extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(
+            trailing ?? Icon(
               Icons.chevron_right_rounded,
               color: Colors.white24,
               size: 20.sp,

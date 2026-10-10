@@ -10,6 +10,7 @@ class ShowOffPostCard extends StatelessWidget {
   final VoidCallback onChoose;
   final VoidCallback onMessage;
   final VoidCallback onDelete;
+  final VoidCallback onReport;
 
   const ShowOffPostCard({
     super.key,
@@ -18,6 +19,7 @@ class ShowOffPostCard extends StatelessWidget {
     required this.onChoose,
     required this.onMessage,
     required this.onDelete,
+    required this.onReport,
   });
 
   @override
@@ -46,12 +48,14 @@ class ShowOffPostCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _userInfo(),
-                    if (!isMine) ...[SizedBox(height: 14.h), _actions()],
+                    if (!isMine) ...[SizedBox(height: 14.h), _actions(context)],
                   ],
                 ),
               ),
               if (isMine)
                 Positioned(top: 12.h, left: 12.w, child: _deleteButton()),
+              if (!isMine)
+                Positioned(top: 12.h, left: 12.w, child: _reportButton(context)),
             ],
           ),
         ],
@@ -62,68 +66,84 @@ class ShowOffPostCard extends StatelessWidget {
   Widget _userInfo() {
     final user = post.user;
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: Alignment.bottomLeft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (user?.profileImage != null) ...[
-                CircleAvatar(
-                  radius: 16.r,
-                  backgroundImage: NetworkImage(user!.profileImage!),
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 18.r,
+                    backgroundImage: NetworkImage(user!.profileImage!),
+                  ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 10.w),
               ],
-              Expanded(
+              Flexible(
                 child: Text(
                   user?.name ?? 'Unknown',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20.sp,
+                    fontSize: 24.sp,
                     fontWeight: FontWeight.w800,
-                    shadows: const [Shadow(color: Colors.black54, blurRadius: 6)],
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
-              if (user?.age != null)
+              if (user?.age != null) ...[
                 Text(
-                  '${user!.age}',
+                  ', ${user!.age}',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    shadows: const [Shadow(color: Colors.black54, blurRadius: 6)],
+                    color: Colors.white70,
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+              ],
             ],
           ),
           if (user?.passion != null && user!.passion.isNotEmpty) ...[
-            SizedBox(height: 6.h),
+            SizedBox(height: 8.h),
             Text(
-              user.passion.take(3).join(' • '),
+              user.passion.take(3).join('  •  '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
-                fontSize: 13.sp,
-                shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
           if (user?.preferences != null && user!.preferences.isNotEmpty) ...[
-            SizedBox(height: 4.h),
-            Text(
-              'Looking for: ${user.preferences.take(2).join(', ')}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 12.sp,
-                shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
-              ),
+            SizedBox(height: 6.h),
+            Row(
+              children: [
+                Icon(Icons.search_rounded, color: Colors.white70, size: 14.sp),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(
+                    'Looking for: ${user.preferences.take(2).join(', ')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -140,29 +160,110 @@ class ShowOffPostCard extends StatelessWidget {
     ),
   );
 
-  Widget _actions() => Row(
-    children: [
-      Expanded(
-        child: _button(
-          post.isChosen ? 'Loved' : 'Show Love',
-          post.isChosen ? Icons.check_circle_rounded : Icons.favorite_rounded,
-          onChoose,
-          gradient: post.isChosen
-              ? const [Color(0xFF8E9AAF), Color(0xFFB8C0CC)]
-              : const [Color(0xFFFF4D8D), Color(0xFFFF7A59)],
-        ),
+  Widget _reportButton(BuildContext context) {
+    int reportCount = post.reportedBy.length;
+    Color iconColor = Colors.white54;
+    IconData iconData = Icons.flag_outlined;
+
+    if (reportCount >= 4) {
+      iconColor = Colors.redAccent;
+      iconData = Icons.flag_rounded;
+    } else if (reportCount >= 1) {
+      iconColor = Colors.amber;
+      iconData = Icons.flag_rounded;
+    }
+
+    return Material(
+      color: Colors.black54,
+      shape: const CircleBorder(),
+      child: IconButton(
+        icon: Icon(iconData, color: iconColor),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: const Color(0xFF1E2036),
+              title: const Text('Report Content', style: TextStyle(color: Colors.white)),
+              content: const Text(
+                'Are you sure you want to report this user/post for inappropriate behavior? False reports may lead to account suspension.',
+                style: TextStyle(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    onReport();
+                  },
+                  child: const Text('Report', style: TextStyle(color: Colors.redAccent)),
+                ),
+              ],
+            ),
+          );
+        },
       ),
-      SizedBox(width: 12.w),
-      Expanded(
-        child: _button(
-          'Message',
-          Icons.chat_bubble_rounded,
-          onMessage,
-          gradient: const [Color(0xFF007BFF), Color(0xFF5AA9FF)],
+    );
+  }
+
+  Widget _actions(BuildContext context) {
+    void handleAction(VoidCallback action, String actionName) {
+      if (post.reportedBy.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF1E2036),
+            title: const Text('Warning', style: TextStyle(color: Colors.amber)),
+            content: Text(
+              'This post has been flagged by other users for inappropriate content. Are you sure you want to $actionName?',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  action();
+                },
+                child: const Text('Proceed', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      } else {
+        action();
+      }
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: _button(
+            post.isChosen ? 'Loved' : 'Show Love',
+            post.isChosen ? Icons.check_circle_rounded : Icons.favorite_rounded,
+            () => handleAction(onChoose, 'show love to this user'),
+            gradient: post.isChosen
+                ? const [Color(0xFF8E9AAF), Color(0xFFB8C0CC)]
+                : const [Color(0xFFFF4D8D), Color(0xFFFF7A59)],
+          ),
         ),
-      ),
-    ],
-  );
+        SizedBox(width: 12.w),
+        Expanded(
+          child: _button(
+            'Message',
+            Icons.chat_bubble_rounded,
+            () => handleAction(onMessage, 'message this user'),
+            gradient: const [Color(0xFF007BFF), Color(0xFF5AA9FF)],
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _button(
     String label,
@@ -174,31 +275,29 @@ class ShowOffPostCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(28.r),
+        borderRadius: BorderRadius.circular(30.r),
         child: Ink(
-          padding: EdgeInsets.symmetric(vertical: 13.h),
+          padding: EdgeInsets.symmetric(vertical: 14.h),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: gradient),
-            borderRadius: BorderRadius.circular(28.r),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.first.withOpacity(0.35),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(30.r),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 18.sp),
+              Icon(icon, color: Colors.white, size: 20.sp),
               SizedBox(width: 8.w),
               Text(
                 label,
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16.sp,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],

@@ -6,6 +6,7 @@ class ShowOffModel {
   final List<String> images;
   final DateTime? createdAt;
   final bool isChosen;
+  final List<String> reportedBy;
 
   ShowOffModel({
     required this.id,
@@ -13,14 +14,16 @@ class ShowOffModel {
     required this.images,
     this.createdAt,
     this.isChosen = false,
+    this.reportedBy = const [],
   });
 
-  ShowOffModel copyWith({bool? isChosen}) => ShowOffModel(
+  ShowOffModel copyWith({bool? isChosen, List<String>? reportedBy}) => ShowOffModel(
         id: id,
         user: user,
         images: images,
         createdAt: createdAt,
         isChosen: isChosen ?? this.isChosen,
+        reportedBy: reportedBy ?? this.reportedBy,
       );
 
   factory ShowOffModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +35,7 @@ class ShowOffModel {
           ? DateTime.parse(json['createdAt'])
           : null,
       isChosen: json['isChosen'] ?? false,
+      reportedBy: json['reportedBy'] != null ? List<String>.from(json['reportedBy']) : [],
     );
   }
 
@@ -41,6 +45,7 @@ class ShowOffModel {
       'user': user?.toJson(),
       'images': images,
       'createdAt': createdAt?.toIso8601String(),
+      'reportedBy': reportedBy,
     };
   }
 }
