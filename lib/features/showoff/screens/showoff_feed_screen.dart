@@ -1,7 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'dart:ui';
+
 import 'package:go_router/go_router.dart';
+import 'package:confettie_plus/confettie_plus.dart';
 
 import '../controllers/showoff_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
@@ -29,9 +34,14 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   bool _paginationLocked = false; // throttle pagination
   String _searchQuery = '';
   bool _isPrivacyDialogShowing = false;
+  late final ConfettieController _confettiController;
+
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettieController(
+      duration: const Duration(seconds: 2),
+    );
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkPrivacyPolicy();
@@ -42,12 +52,15 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   void dispose() {
     _scrollController.dispose();
     _fabVisible.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
   void _checkPrivacyPolicy() {
     final user = _authCtrl.currentUser.value;
-    if (user != null && !user.hasAcceptedPrivacyPolicy && !_isPrivacyDialogShowing) {
+    if (user != null &&
+        !user.hasAcceptedPrivacyPolicy &&
+        !_isPrivacyDialogShowing) {
       _isPrivacyDialogShowing = true;
       showDialog(
         context: context,
@@ -59,10 +72,15 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: AlertDialog(
                 backgroundColor: const Color(0xFF1E1E2C).withOpacity(0.9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 title: const Text(
                   'Update on Privacy Policy & Terms',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 content: const Text(
                   'We have updated our Privacy Policy and Terms of Service to include strict content guidelines, zero tolerance for explicit/violent content, and limitation of liability. You must read and accept them to continue using the app.',
@@ -73,11 +91,16 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
                     onPressed: () async {
                       await context.push('/profile/privacy-policy');
                       final updatedUser = _authCtrl.currentUser.value;
-                      if (updatedUser != null && updatedUser.hasAcceptedPrivacyPolicy && mounted) {
+                      if (updatedUser != null &&
+                          updatedUser.hasAcceptedPrivacyPolicy &&
+                          mounted) {
                         Navigator.pop(context); // Close dialog
                       }
                     },
-                    child: const Text('Read Policy', style: TextStyle(color: Colors.blueAccent)),
+                    child: const Text(
+                      'Read Policy',
+                      style: TextStyle(color: Colors.blueAccent),
+                    ),
                   ),
                 ],
               ),
@@ -93,14 +116,10 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     final pos = _scrollController.position;
     if (pos.pixels >= pos.maxScrollExtent - 300) {
       _paginationLocked = true;
-      (_showMyPosts
-              ? _showOffCtrl.fetchMyPosts()
-              : _showOffCtrl.fetchFeed())
+      (_showMyPosts ? _showOffCtrl.fetchMyPosts() : _showOffCtrl.fetchFeed())
           .whenComplete(() => _paginationLocked = false);
     }
   }
-
-
 
   bool _onScrollNotification(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
@@ -118,10 +137,7 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(text),
-          behavior: SnackBarBehavior.fixed,
-        ),
+        SnackBar(content: Text(text), behavior: SnackBarBehavior.fixed),
       );
   }
 
@@ -131,7 +147,10 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     if (newlyChosen == null) {
       return _toast('Could not send love. Please try again.');
     }
-    if (!newlyChosen) return _toast('You have already shown love to this person ✅');
+    if (!newlyChosen)
+      return _toast('You have already shown love to this person ✅');
+
+    _confettiController.play();
 
     SocketService.emitWithAck('access_chat', {'userId': targetUserId}, (res) {
       if (!mounted) return;
@@ -184,8 +203,9 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
 
   void _onToggle(bool value) {
     setState(() => _showMyPosts = value);
-    if (value && _showOffCtrl.myPosts.isEmpty)
+    if (value && _showOffCtrl.myPosts.isEmpty) {
       _showOffCtrl.fetchMyPosts(refresh: true);
+    }
   }
 
   void _onSearchChanged(String query) {
@@ -202,21 +222,39 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0C1F),
-      body: SafeArea(
-        child: Column(
-          children: [
-            ShowOffHeader(
-              showMyPosts: _showMyPosts,
-              onChanged: _onToggle,
-              onSearch: _onSearchChanged,
-            ),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _onScrollNotification,
-                child: Obx(_buildBody),
+      body: ConfettieWidget(
+        controller: _confettiController,
+        shapes: const [HeartShape()],
+        colors: const [Colors.red, Colors.pinkAccent, Colors.pink],
+
+        numberOfParticles: 80,
+        minParticleSize: 10.0,
+        maxParticleSize: 20.0,
+
+        gravity: 250.0,
+        blastForce: 450.0,
+        drag: 0.06,
+
+        blastDirection: BlastDirection.up,
+        emissionSource: Alignment.center,
+        emissionBehavior: EmissionBehavior.burst,
+
+        child: SafeArea(
+          child: Column(
+            children: [
+              ShowOffHeader(
+                showMyPosts: _showMyPosts,
+                onChanged: _onToggle,
+                onSearch: _onSearchChanged,
               ),
-            ),
-          ],
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _onScrollNotification,
+                  child: Obx(_buildBody),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: ValueListenableBuilder<bool>(
@@ -238,20 +276,26 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
 
   Widget _buildBody() {
     var posts = _showMyPosts ? _showOffCtrl.myPosts : _showOffCtrl.feedPosts;
-    
+
     if (_searchQuery.isNotEmpty) {
-      posts = posts.where((p) {
-        final name = p.user?.name.toLowerCase() ?? '';
-        final username = p.user?.username.toLowerCase() ?? '';
-        final email = p.user?.email.toLowerCase() ?? '';
-        return name.contains(_searchQuery) || username.contains(_searchQuery) || email.contains(_searchQuery);
-      }).toList().obs;
+      posts = posts
+          .where((p) {
+            final name = p.user?.name.toLowerCase() ?? '';
+            final username = p.user?.username.toLowerCase() ?? '';
+            final email = p.user?.email.toLowerCase() ?? '';
+            return name.contains(_searchQuery) ||
+                username.contains(_searchQuery) ||
+                email.contains(_searchQuery);
+          })
+          .toList()
+          .obs;
     }
 
     final loading = _showMyPosts
         ? _showOffCtrl.isLoadingMyPosts.value
         : _showOffCtrl.isLoadingFeed.value;
-    final bool hasSearchOrFilter = _showOffCtrl.currentFilters.isNotEmpty || _searchQuery.isNotEmpty;
+    final bool hasSearchOrFilter =
+        _showOffCtrl.currentFilters.isNotEmpty || _searchQuery.isNotEmpty;
 
     if (posts.isEmpty) {
       return loading
@@ -293,7 +337,9 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(error ?? 'Post reported successfully!'),
-                      backgroundColor: error != null ? Colors.redAccent : Colors.green,
+                      backgroundColor: error != null
+                          ? Colors.redAccent
+                          : Colors.green,
                     ),
                   );
                 }

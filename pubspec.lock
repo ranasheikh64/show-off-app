@@ -201,6 +201,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  confettie_plus:
+    dependency: "direct main"
+    description:
+      name: confettie_plus
+      sha256: "1d1b8c51bc8bdcb7b824eb8651d5fa5b85e1bf4721ad02e5fa6254e5b22bc3f2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   convert:
     dependency: transitive
     description:
