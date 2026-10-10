@@ -8,6 +8,10 @@ class ShowOffModel {
   final bool isChosen;
   final List<String> reportedBy;
 
+  final String? musicUrl;
+  final String? musicTitle;
+  final String? musicArtist;
+
   ShowOffModel({
     required this.id,
     this.user,
@@ -15,6 +19,9 @@ class ShowOffModel {
     this.createdAt,
     this.isChosen = false,
     this.reportedBy = const [],
+    this.musicUrl,
+    this.musicTitle,
+    this.musicArtist,
   });
 
   ShowOffModel copyWith({bool? isChosen, List<String>? reportedBy}) => ShowOffModel(
@@ -24,6 +31,9 @@ class ShowOffModel {
         createdAt: createdAt,
         isChosen: isChosen ?? this.isChosen,
         reportedBy: reportedBy ?? this.reportedBy,
+        musicUrl: musicUrl,
+        musicTitle: musicTitle,
+        musicArtist: musicArtist,
       );
 
   factory ShowOffModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +46,9 @@ class ShowOffModel {
           : null,
       isChosen: json['isChosen'] ?? false,
       reportedBy: json['reportedBy'] != null ? List<String>.from(json['reportedBy']) : [],
+      musicUrl: json['musicUrl'],
+      musicTitle: json['musicTitle'],
+      musicArtist: json['musicArtist'],
     );
   }
 
@@ -46,6 +59,9 @@ class ShowOffModel {
       'images': images,
       'createdAt': createdAt?.toIso8601String(),
       'reportedBy': reportedBy,
+      'musicUrl': musicUrl,
+      'musicTitle': musicTitle,
+      'musicArtist': musicArtist,
     };
   }
 }

@@ -65,6 +65,8 @@ dependencies:
   firebase_messaging: ^16.7.0
   flutter_local_notifications: ^22.3.1
   confettie_plus: ^0.0.1
+  just_audio: ^0.10.6
+  visibility_detector: ^0.4.0+2
 dev_dependencies:
   flutter_test:
     sdk: flutter

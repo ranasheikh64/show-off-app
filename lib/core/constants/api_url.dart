@@ -20,7 +20,8 @@ class ApiUrl {
   static const String discoverUsers = '$baseUrl/users/discover';
   static const String searchUsers = '$baseUrl/users/search';
   static const String deleteAccount = '$baseUrl/users/me';
-  static const String acceptPrivacyPolicy = '$baseUrl/users/accept-privacy-policy';
+  static const String acceptPrivacyPolicy =
+      '$baseUrl/users/accept-privacy-policy';
 
   // Chat endpoints
   static const String fetchChats = '$baseUrl/chats';
@@ -33,4 +34,7 @@ class ApiUrl {
   static const String showOffChoose = '$baseUrl/showoff/choose';
   static String showOffById(String id) => '$baseUrl/showoff/$id';
   static String showOffReportById(String id) => '$baseUrl/showoff/$id/report';
+
+  // Music endpoints
+  static const String searchMusic = '$baseUrl/music/search';
 }

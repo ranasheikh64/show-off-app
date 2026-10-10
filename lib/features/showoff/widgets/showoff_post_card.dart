@@ -146,6 +146,27 @@ class ShowOffPostCard extends StatelessWidget {
               ],
             ),
           ],
+          if (post.musicTitle != null) ...[
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Icon(Icons.music_note_rounded, color: Colors.pinkAccent, size: 14.sp),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(
+                    '${post.musicTitle} • ${post.musicArtist}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

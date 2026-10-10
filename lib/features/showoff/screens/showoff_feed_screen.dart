@@ -7,8 +7,10 @@ import 'dart:ui';
 
 import 'package:go_router/go_router.dart';
 import 'package:confettie_plus/confettie_plus.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../controllers/showoff_controller.dart';
+import '../controllers/feed_audio_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../chat/services/socket_service.dart';
 import '../../chat/controllers/chat_controller.dart';
@@ -27,6 +29,7 @@ class ShowOffFeedScreen extends StatefulWidget {
 
 class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   final ShowOffController _showOffCtrl = Get.put(ShowOffController());
+  final FeedAudioController _audioCtrl = Get.put(FeedAudioController());
   final AuthController _authCtrl = Get.find<AuthController>();
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<bool> _fabVisible = ValueNotifier(true);
@@ -50,6 +53,7 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
 
   @override
   void dispose() {
+    _audioCtrl.pauseMusic();
     _scrollController.dispose();
     _fabVisible.dispose();
     _confettiController.dispose();
@@ -325,25 +329,37 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
           final post = posts[i];
           return RepaintBoundary(
             key: ValueKey(post.id),
-            child: ShowOffPostCard(
-              post: post,
-              isMine: post.user?.id == _authCtrl.currentUser.value?.id,
-              onChoose: () => _chooseUser(post.user!.id),
-              onMessage: () => _messageUser(post.user!.id, post.user!.name),
-              onDelete: () => _confirmDelete(post.id),
-              onReport: () async {
-                final error = await _showOffCtrl.reportPost(post.id);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(error ?? 'Post reported successfully!'),
-                      backgroundColor: error != null
-                          ? Colors.redAccent
-                          : Colors.green,
-                    ),
-                  );
+            child: VisibilityDetector(
+              key: Key('visibility-${post.id}'),
+              onVisibilityChanged: (info) {
+                if (info.visibleFraction > 0.5) {
+                  if (post.musicUrl != null && post.musicUrl!.isNotEmpty) {
+                    Get.find<FeedAudioController>().playMusic(post.musicUrl!);
+                  } else {
+                    Get.find<FeedAudioController>().pauseMusic();
+                  }
                 }
               },
+              child: ShowOffPostCard(
+                post: post,
+                isMine: post.user?.id == _authCtrl.currentUser.value?.id,
+                onChoose: () => _chooseUser(post.user!.id),
+                onMessage: () => _messageUser(post.user!.id, post.user!.name),
+                onDelete: () => _confirmDelete(post.id),
+                onReport: () async {
+                  final error = await _showOffCtrl.reportPost(post.id);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(error ?? 'Post reported successfully!'),
+                        backgroundColor: error != null
+                            ? Colors.redAccent
+                            : Colors.green,
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
           );
         },

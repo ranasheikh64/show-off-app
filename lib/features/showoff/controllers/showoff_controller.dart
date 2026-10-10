@@ -116,7 +116,7 @@ class ShowOffController extends GetxController {
     }
   }
 
-  Future<bool> createPost(List<String> filePaths) async {
+  Future<bool> createPost(List<String> filePaths, {String? musicUrl, String? musicTitle, String? musicArtist}) async {
     isUploading.value = true;
     uploadProgress.value = 0.0;
     try {
@@ -142,9 +142,14 @@ class ShowOffController extends GetxController {
         uploadedUrls.add(response.data['url']);
       }
 
+      final Map<String, dynamic> payload = {'images': uploadedUrls};
+      if (musicUrl != null) payload['musicUrl'] = musicUrl;
+      if (musicTitle != null) payload['musicTitle'] = musicTitle;
+      if (musicArtist != null) payload['musicArtist'] = musicArtist;
+
       final response = await _apiService.post(
         ApiUrl.showOff,
-        data: {'images': uploadedUrls},
+        data: payload,
       );
       if (response.data['success']) {
         final newPost = ShowOffModel.fromJson(response.data['data']);
