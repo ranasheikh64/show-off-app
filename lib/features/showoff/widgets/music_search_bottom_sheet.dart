@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:just_audio/just_audio.dart';
-import '../../../core/constants/app_theme.dart';
 import '../services/music_service.dart';
-import 'music_list_item.dart';
 import 'music_search_header.dart';
+import 'music_search_results_list.dart';
 
 class MusicSearchBottomSheet extends StatefulWidget {
   final Function(MusicModel) onMusicSelected;
@@ -19,14 +18,33 @@ class MusicSearchBottomSheet extends StatefulWidget {
 class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
   final TextEditingController _searchController = TextEditingController();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  StreamSubscription<PlayerState>? _playerSub;
   Timer? _debounce;
   List<MusicModel> _searchResults = [];
   bool _isLoading = false;
   String? _currentUrl;
+  bool _isPlaying = false;
+  bool _isBuffering = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _playerSub = _audioPlayer.playerStateStream.listen((state) {
+      if (!mounted) return;
+      final playing = state.playing && state.processingState != ProcessingState.completed;
+      final buffering = state.processingState == ProcessingState.buffering ||
+          state.processingState == ProcessingState.loading;
+      setState(() {
+        _isPlaying = playing;
+        _isBuffering = buffering;
+      });
+    });
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _playerSub?.cancel();
     _searchController.dispose();
     _audioPlayer.dispose();
     super.dispose();
@@ -45,18 +63,22 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
   }
 
   Future<void> _togglePlay(String url) async {
-    if (_currentUrl == url && _audioPlayer.playing) {
-      await _audioPlayer.pause();
-    } else {
-      _currentUrl = url;
-      await _audioPlayer.setUrl(url);
-      await _audioPlayer.play();
+    try {
+      if (_currentUrl == url && _isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        setState(() => _currentUrl = url);
+        await _audioPlayer.setUrl(url);
+        _audioPlayer.play();
+      }
+    } catch (e) {
+      debugPrint('Audio playback error: $e');
     }
-    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
@@ -77,42 +99,23 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
             },
           ),
           SizedBox(height: 6.h),
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: MusicSearchResultsList(
+              results: _searchResults,
+              isLoading: _isLoading,
+              currentUrl: _currentUrl,
+              isPlaying: _isPlaying,
+              isBuffering: _isBuffering,
+              onPlayToggle: _togglePlay,
+              onSelect: (m) {
+                _audioPlayer.stop();
+                widget.onMusicSelected(m);
+                Navigator.pop(context);
+              },
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_isLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue));
-    if (_searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.music_note_rounded, size: 48.sp, color: Colors.white24),
-            SizedBox(height: 8.h),
-            Text('Search your favorite songs ✨', style: TextStyle(color: Colors.white60, fontSize: 13.sp)),
-          ],
-        ),
-      );
-    }
-    return ListView.builder(
-      itemCount: _searchResults.length,
-      itemBuilder: (context, i) {
-        final m = _searchResults[i];
-        final isPlaying = _currentUrl == m.previewUrl && _audioPlayer.playing;
-        return MusicListItem(
-          music: m,
-          isPlaying: isPlaying,
-          onPlayToggle: () => _togglePlay(m.previewUrl),
-          onSelect: () {
-            _audioPlayer.stop();
-            widget.onMusicSelected(m);
-            Navigator.pop(context);
-          },
-        );
-      },
     );
   }
 }

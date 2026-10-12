@@ -6,6 +6,7 @@ import '../services/music_service.dart';
 class MusicListItem extends StatelessWidget {
   final MusicModel music;
   final bool isPlaying;
+  final bool isLoading;
   final VoidCallback onPlayToggle;
   final VoidCallback onSelect;
 
@@ -13,6 +14,7 @@ class MusicListItem extends StatelessWidget {
     super.key,
     required this.music,
     required this.isPlaying,
+    this.isLoading = false,
     required this.onPlayToggle,
     required this.onSelect,
   });
@@ -77,11 +79,19 @@ class MusicListItem extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: isPlaying ? AppTheme.primaryBlue : Colors.white.withValues(alpha: 0.1),
               ),
-              child: Icon(
-                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 20.sp,
-              ),
+              child: isLoading
+                  ? Center(
+                      child: SizedBox(
+                        width: 16.w,
+                        height: 16.w,
+                        child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      ),
+                    )
+                  : Icon(
+                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 20.sp,
+                    ),
             ),
           ),
           SizedBox(width: 8.w),
@@ -111,4 +121,5 @@ class MusicListItem extends StatelessWidget {
     );
   }
 }
+
 
