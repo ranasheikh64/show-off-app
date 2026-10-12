@@ -5,7 +5,9 @@
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>We need microphone access to record voice messages</string>
+		<string>We need microphone access for audio calls and voice messages</string>
+		<key>NSCameraUsageDescription</key>
+		<string>We need camera access for video calling</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>

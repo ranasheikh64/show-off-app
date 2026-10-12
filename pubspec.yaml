@@ -67,6 +67,7 @@ dependencies:
   confettie_plus: ^0.0.1
   just_audio: ^0.10.6
   visibility_detector: ^0.4.0+2
+  flutter_webrtc: ^1.6.2+hotfix.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

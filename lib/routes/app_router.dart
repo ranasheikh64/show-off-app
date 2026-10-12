@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/screens/login_screen.dart';
@@ -19,6 +20,7 @@ import '../core/storage/hive_service.dart';
 import '../features/showoff/screens/showoff_feed_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/privacy_policy_screen.dart';
+import '../features/call/screens/call_screen.dart';
 
 String getInitialRoute() {
   final token = HiveService.getToken();
@@ -30,9 +32,16 @@ String getInitialRoute() {
   return '/onboarding';
 }
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final GoRouter appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: getInitialRoute(),
   routes: [
+    GoRoute(
+      path: '/call',
+      builder: (context, state) => const CallScreen(),
+    ),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),

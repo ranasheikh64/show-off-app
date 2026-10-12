@@ -10,6 +10,8 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_theme.dart';
 import '../controllers/chat_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../call/controllers/call_controller.dart';
+import '../../call/models/call_model.dart';
 
 import 'package:shimmer/shimmer.dart';
 
@@ -817,6 +819,56 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     });
                   },
                 ),
+                Obx(() {
+                  final chat = _chatCtrl.chats.firstWhereOrNull(
+                    (c) => c.id == widget.chatId,
+                  );
+                  final otherUser = chat?.users.firstWhereOrNull(
+                    (u) => u.id != _authCtrl.currentUser.value?.id,
+                  );
+                  final isBlocked =
+                      otherUser != null &&
+                      (otherUser.isBlocked ||
+                          _chatCtrl.blockedUserIds.contains(otherUser.id));
+
+                  if (chat?.isGroupChat == true || otherUser == null || isBlocked) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.call_rounded, color: Colors.white),
+                        tooltip: 'Audio Call',
+                        onPressed: () {
+                          if (Get.isRegistered<CallController>()) {
+                            Get.find<CallController>().startCall(
+                              peerId: otherUser.id,
+                              peerName: otherUser.name,
+                              peerAvatar: otherUser.profileImage,
+                              callType: CallType.audio,
+                            );
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.videocam_rounded, color: Colors.white),
+                        tooltip: 'Video Call',
+                        onPressed: () {
+                          if (Get.isRegistered<CallController>()) {
+                            Get.find<CallController>().startCall(
+                              peerId: otherUser.id,
+                              peerName: otherUser.name,
+                              peerAvatar: otherUser.profileImage,
+                              callType: CallType.video,
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                }),
                 Obx(() {
                   final chat = _chatCtrl.chats.firstWhereOrNull(
                     (c) => c.id == widget.chatId,

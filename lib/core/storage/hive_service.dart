@@ -19,8 +19,13 @@ class HiveService {
   }
 
   static String? getToken() {
-    final box = Hive.box(authBox);
-    return box.get(tokenKey);
+    try {
+      if (!Hive.isBoxOpen(authBox)) return null;
+      final box = Hive.box(authBox);
+      return box.get(tokenKey);
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<void> saveUser(Map<String, dynamic> userData) async {

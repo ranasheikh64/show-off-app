@@ -13,6 +13,7 @@ import 'routes/app_router.dart';
 import 'package:get/get.dart';
 
 import 'features/auth/controllers/auth_controller.dart';
+import 'features/call/controllers/call_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,7 @@ void main() async {
   // Initialize Global Controllers
   Get.put(AuthController(), permanent: true); // AuthController manages global state
   Get.lazyPut(() => ChatController(), fenix: true);
-  // Add other controllers here if needed with fenix: true so they re-initialize after logout
+  Get.put(CallController(), permanent: true); // CallController for incoming/outgoing calls
 
   runApp(const MyApp());
 }

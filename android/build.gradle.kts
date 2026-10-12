@@ -19,6 +19,16 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    plugins.withId("com.android.library") {
+        val android = project.extensions.findByName("android")
+        try {
+            val setCompileSdkVersion = android?.javaClass?.getMethod("setCompileSdkVersion", Int::class.javaPrimitiveType)
+            setCompileSdkVersion?.invoke(android, 35)
+        } catch (_: Exception) {}
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
