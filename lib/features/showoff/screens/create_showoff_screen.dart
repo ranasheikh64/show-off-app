@@ -208,15 +208,17 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
         children: [
           Icon(Icons.info_outline_rounded, size: 16.sp, color: Colors.white70),
           SizedBox(width: 6.w),
-          Text(
-            'First photo is cover · Long press & drag to reorder ✨',
-            style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+          Expanded(
+            child: Text(
+              'First photo is cover · Long press & drag to reorder ✨',
+              style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+            ),
           ),
-
         ],
       ),
     );
   }
+
 
   Widget _buildMusicSelector() {
     return Padding(
