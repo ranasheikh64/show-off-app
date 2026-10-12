@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 import '../../../core/widgets/image_preview_screen.dart';
 
 class ShowOffImageCarousel extends StatefulWidget {
@@ -49,24 +48,30 @@ class _ShowOffImageCarouselState extends State<ShowOffImageCarousel> {
                 child: CachedNetworkImage(
                   imageUrl: widget.images[i],
                   fit: BoxFit.cover,
-                  fadeInDuration: const Duration(milliseconds: 300),
-                  placeholder: (_, __) => Shimmer.fromColors(
-                    baseColor: const Color(0xFFE0E0E0),
-                    highlightColor: const Color(0xFFF5F5F5),
-                    child: Container(color: Colors.white),
+                  alignment: Alignment.center,
+                  memCacheWidth: 720,
+                  maxWidthDiskCache: 1080,
+                  filterQuality: FilterQuality.low,
+                  fadeInDuration: const Duration(milliseconds: 150),
+                  placeholder: (context, url) => Container(
+                    color: const Color(0xFF16182B),
+                    child: const Center(
+                      child: Icon(Icons.photo_rounded, color: Colors.white24, size: 36),
+                    ),
                   ),
-                  errorWidget: (_, __, ___) => Container(
-                    color: Colors.grey.shade200,
+                  errorWidget: (context, url, error) => Container(
+                    color: const Color(0xFF16182B),
                     child: const Icon(
                       Icons.broken_image_rounded,
                       size: 48,
-                      color: Colors.grey,
+                      color: Colors.white38,
                     ),
                   ),
                 ),
               ),
             ),
           ),
+
           const IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(

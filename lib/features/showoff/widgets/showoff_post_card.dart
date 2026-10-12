@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/showoff_model.dart';
 import 'showoff_image_carousel.dart';
@@ -24,23 +25,16 @@ class ShowOffPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Stack(
+    return RepaintBoundary(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
+        child: Material(
+          color: const Color(0xFF16182B),
+          borderRadius: BorderRadius.circular(24.r),
+          clipBehavior: Clip.antiAlias,
+          elevation: 3,
+          shadowColor: Colors.black26,
+          child: Stack(
             children: [
               ShowOffImageCarousel(
                 images: post.images,
@@ -58,7 +52,7 @@ class ShowOffPostCard extends StatelessWidget {
                 Positioned(top: 12.h, left: 12.w, child: _reportButton(context)),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -82,7 +76,12 @@ class ShowOffPostCard extends StatelessWidget {
                   ),
                   child: CircleAvatar(
                     radius: 18.r,
-                    backgroundImage: NetworkImage(user!.profileImage!),
+                    backgroundColor: const Color(0xFF2A2D4A),
+                    backgroundImage: CachedNetworkImageProvider(
+                      user!.profileImage!,
+                      maxHeight: 80,
+                      maxWidth: 80,
+                    ),
                   ),
                 ),
                 SizedBox(width: 10.w),
@@ -119,7 +118,7 @@ class ShowOffPostCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
               ),

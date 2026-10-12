@@ -21,13 +21,14 @@ import '../widgets/showoff_post_card.dart';
 import 'create_showoff_screen.dart';
 
 class ShowOffFeedScreen extends StatefulWidget {
-  const ShowOffFeedScreen({Key? key}) : super(key: key);
+  const ShowOffFeedScreen({super.key});
 
   @override
   State<ShowOffFeedScreen> createState() => _ShowOffFeedScreenState();
 }
 
-class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
+class _ShowOffFeedScreenState extends State<ShowOffFeedScreen>
+    with WidgetsBindingObserver {
   final ShowOffController _showOffCtrl = Get.put(ShowOffController());
   final FeedAudioController _audioCtrl = Get.put(FeedAudioController());
   final AuthController _authCtrl = Get.find<AuthController>();
@@ -42,6 +43,10 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    VisibilityDetectorController.instance.updateInterval = const Duration(
+      milliseconds: 250,
+    );
     _confettiController = ConfettieController(
       duration: const Duration(seconds: 2),
     );
@@ -53,11 +58,21 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _audioCtrl.pauseMusic();
     _scrollController.dispose();
     _fabVisible.dispose();
     _confettiController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      _audioCtrl.pauseMusic();
+    }
   }
 
   void _checkPrivacyPolicy() {
@@ -69,7 +84,7 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) {
+        builder: (dialogCtx) {
           return WillPopScope(
             onWillPop: () async => false, // Prevent dismissing with back button
             child: BackdropFilter(
@@ -93,12 +108,12 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
                 actions: [
                   TextButton(
                     onPressed: () async {
-                      await context.push('/profile/privacy-policy');
+                      await dialogCtx.push('/profile/privacy-policy');
                       final updatedUser = _authCtrl.currentUser.value;
+                      if (!dialogCtx.mounted) return;
                       if (updatedUser != null &&
-                          updatedUser.hasAcceptedPrivacyPolicy &&
-                          mounted) {
-                        Navigator.pop(context); // Close dialog
+                          updatedUser.hasAcceptedPrivacyPolicy) {
+                        Navigator.of(dialogCtx).pop();
                       }
                     },
                     child: const Text(
@@ -127,13 +142,11 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
 
   bool _onScrollNotification(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (n is ScrollStartNotification || n is ScrollUpdateNotification) {
-        if (_fabVisible.value) _fabVisible.value = false;
-      } else if (n is ScrollEndNotification) {
-        if (!_fabVisible.value) _fabVisible.value = true;
-      }
-    });
+    if (n is ScrollStartNotification || n is ScrollUpdateNotification) {
+      if (_fabVisible.value) _fabVisible.value = false;
+    } else if (n is ScrollEndNotification) {
+      if (!_fabVisible.value) _fabVisible.value = true;
+    }
     return false;
   }
 
@@ -151,8 +164,9 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     if (newlyChosen == null) {
       return _toast('Could not send love. Please try again.');
     }
-    if (!newlyChosen)
+    if (!newlyChosen) {
       return _toast('You have already shown love to this person ✅');
+    }
 
     _confettiController.play();
 
@@ -174,6 +188,7 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
     SocketService.emitWithAck('access_chat', {'userId': targetUserId}, (res) {
       if (!mounted) return;
       if (res is Map && res['success'] == true) {
+        _audioCtrl.pauseMusic();
         context.push('/chat/${res['chat']['_id']}', extra: targetUserName);
       } else {
         _toast(
@@ -226,52 +241,64 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0C1F),
-      body: ConfettieWidget(
-        controller: _confettiController,
-        shapes: const [HeartShape()],
-        colors: const [Colors.red, Colors.pinkAccent, Colors.pink],
-
-        numberOfParticles: 80,
-        minParticleSize: 10.0,
-        maxParticleSize: 20.0,
-
-        gravity: 250.0,
-        blastForce: 450.0,
-        drag: 0.06,
-
-        blastDirection: BlastDirection.up,
-        emissionSource: Alignment.center,
-        emissionBehavior: EmissionBehavior.burst,
-
-        child: SafeArea(
-          child: Column(
-            children: [
-              ShowOffHeader(
-                showMyPosts: _showMyPosts,
-                onChanged: _onToggle,
-                onSearch: _onSearchChanged,
-              ),
-              Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: _onScrollNotification,
-                  child: Obx(_buildBody),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                ShowOffHeader(
+                  showMyPosts: _showMyPosts,
+                  onChanged: _onToggle,
+                  onSearch: _onSearchChanged,
                 ),
-              ),
-            ],
+                Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _onScrollNotification,
+                    child: Obx(_buildBody),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          IgnorePointer(
+            child: Align(
+              alignment: Alignment.center,
+              child: ConfettieWidget(
+                controller: _confettiController,
+                shapes: const [HeartShape()],
+                colors: const [Colors.red, Colors.pinkAccent, Colors.pink],
+                numberOfParticles: 80,
+                minParticleSize: 10.0,
+                maxParticleSize: 20.0,
+                gravity: 250.0,
+                blastForce: 450.0,
+                drag: 0.06,
+                blastDirection: BlastDirection.up,
+                emissionSource: Alignment.center,
+                emissionBehavior: EmissionBehavior.burst,
+                child: const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: _fabVisible,
-        builder: (_, visible, __) => Obx(
+        builder: (_, visible, child) => Obx(
           () => ShowOffFabs(
             visible: visible,
             unreadCount: Get.find<ChatController>().unreadChatCount,
-            onChats: () => context.push('/chat-list'),
-            onAddPost: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateShowOffScreen()),
-            ),
+            onChats: () {
+              _audioCtrl.pauseMusic();
+              context.push('/chat-list');
+            },
+            onAddPost: () async {
+              _audioCtrl.pauseMusic();
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreateShowOffScreen()),
+              );
+            },
           ),
         ),
       ),
@@ -313,12 +340,12 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
       onRefresh: _refresh,
       child: ListView.builder(
         controller: _scrollController,
+        cacheExtent: 600,
         padding: const EdgeInsets.only(bottom: 150),
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
         itemCount: posts.length + (loading ? 1 : 0),
-        addRepaintBoundaries: false, // we add manually per card
         itemBuilder: (_, i) {
           if (i == posts.length) {
             return const Padding(
@@ -327,39 +354,36 @@ class _ShowOffFeedScreenState extends State<ShowOffFeedScreen> {
             );
           }
           final post = posts[i];
-          return RepaintBoundary(
-            key: ValueKey(post.id),
-            child: VisibilityDetector(
-              key: Key('visibility-${post.id}'),
-              onVisibilityChanged: (info) {
-                if (info.visibleFraction > 0.5) {
-                  if (post.musicUrl != null && post.musicUrl!.isNotEmpty) {
-                    Get.find<FeedAudioController>().playMusic(post.musicUrl!);
-                  } else {
-                    Get.find<FeedAudioController>().pauseMusic();
-                  }
+          return VisibilityDetector(
+            key: Key('visibility-${post.id}'),
+            onVisibilityChanged: (info) {
+              if (info.visibleFraction > 0.5) {
+                if (post.musicUrl != null && post.musicUrl!.isNotEmpty) {
+                  Get.find<FeedAudioController>().playMusic(post.musicUrl!);
+                } else {
+                  Get.find<FeedAudioController>().pauseMusic();
+                }
+              }
+            },
+            child: ShowOffPostCard(
+              post: post,
+              isMine: post.user?.id == _authCtrl.currentUser.value?.id,
+              onChoose: () => _chooseUser(post.user!.id),
+              onMessage: () => _messageUser(post.user!.id, post.user!.name),
+              onDelete: () => _confirmDelete(post.id),
+              onReport: () async {
+                final error = await _showOffCtrl.reportPost(post.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error ?? 'Post reported successfully!'),
+                      backgroundColor: error != null
+                          ? Colors.redAccent
+                          : Colors.green,
+                    ),
+                  );
                 }
               },
-              child: ShowOffPostCard(
-                post: post,
-                isMine: post.user?.id == _authCtrl.currentUser.value?.id,
-                onChoose: () => _chooseUser(post.user!.id),
-                onMessage: () => _messageUser(post.user!.id, post.user!.name),
-                onDelete: () => _confirmDelete(post.id),
-                onReport: () async {
-                  final error = await _showOffCtrl.reportPost(post.id);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(error ?? 'Post reported successfully!'),
-                        backgroundColor: error != null
-                            ? Colors.redAccent
-                            : Colors.green,
-                      ),
-                    );
-                  }
-                },
-              ),
             ),
           );
         },

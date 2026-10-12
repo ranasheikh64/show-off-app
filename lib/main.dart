@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'firebase_options.dart';
 import 'package:frontend/features/chat/controllers/chat_controller.dart';
 import 'core/services/push_notification_service.dart';
@@ -15,6 +16,8 @@ import 'features/auth/controllers/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  VisibilityDetectorController.instance.updateInterval =
+      const Duration(milliseconds: 300);
   
   // Initialize Firebase
   await Firebase.initializeApp(
