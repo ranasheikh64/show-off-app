@@ -65,6 +65,14 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
 
   void _remove(int i) => setState(() => _images.removeAt(i));
 
+  void _reorder(int oldIndex, int newIndex) {
+    if (oldIndex == newIndex) return;
+    setState(() {
+      final item = _images.removeAt(oldIndex);
+      _images.insert(newIndex, item);
+    });
+  }
+
   Future<void> _post() async {
     if (_images.isEmpty) {
       _showSnack('Please select at least one photo ✨', isError: true);
@@ -116,6 +124,7 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
                 images: _images,
                 onAddTap: _pickImages,
                 onRemove: _remove,
+                onReorder: _reorder,
               ),
             ),
           ],
@@ -123,6 +132,7 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
       }),
     );
   }
+
 
   Widget _buildAppBar() {
     return SliverAppBar(
@@ -199,9 +209,10 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
           Icon(Icons.info_outline_rounded, size: 16.sp, color: Colors.white70),
           SizedBox(width: 6.w),
           Text(
-            'First photo will be your cover · Tap + to add more',
+            'First photo is cover · Long press & drag to reorder ✨',
             style: TextStyle(fontSize: 12.sp, color: Colors.white70),
           ),
+
         ],
       ),
     );
@@ -227,10 +238,11 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
+
           child: Row(
             children: [
               Icon(Icons.music_note_rounded, color: AppTheme.primaryBlue, size: 24.sp),
