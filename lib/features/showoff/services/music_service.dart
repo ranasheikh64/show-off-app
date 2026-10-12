@@ -36,13 +36,13 @@ class MusicModel {
 class MusicService {
   static final Dio _dio = DioClient.instance;
 
-  static Future<List<MusicModel>> searchMusic([String? query]) async {
+  static Future<List<MusicModel>> searchMusic({String? query, int page = 1, int limit = 20}) async {
     try {
-      final hasQuery = query != null && query.trim().isNotEmpty;
-      final response = await _dio.get(
-        ApiUrl.searchMusic,
-        queryParameters: hasQuery ? {'query': query.trim()} : null,
-      );
+      final Map<String, dynamic> queryParams = {'page': page, 'limit': limit};
+      if (query != null && query.trim().isNotEmpty) {
+        queryParams['query'] = query.trim();
+      }
+      final response = await _dio.get(ApiUrl.searchMusic, queryParameters: queryParams);
 
       if (response.data != null && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] ?? [];
@@ -57,7 +57,7 @@ class MusicService {
       }
       return [];
     }
-
   }
+
 
 }

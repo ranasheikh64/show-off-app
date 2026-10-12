@@ -7,6 +7,8 @@ import 'music_list_item.dart';
 class MusicSearchResultsList extends StatelessWidget {
   final List<MusicModel> results;
   final bool isLoading;
+  final bool isLoadingMore;
+  final ScrollController scrollController;
   final String? currentUrl;
   final bool isPlaying;
   final bool isBuffering;
@@ -17,6 +19,8 @@ class MusicSearchResultsList extends StatelessWidget {
     super.key,
     required this.results,
     required this.isLoading,
+    this.isLoadingMore = false,
+    required this.scrollController,
     required this.currentUrl,
     required this.isPlaying,
     required this.isBuffering,
@@ -40,8 +44,21 @@ class MusicSearchResultsList extends StatelessWidget {
       );
     }
     return ListView.builder(
-      itemCount: results.length,
+      controller: scrollController,
+      itemCount: results.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, i) {
+        if (i == results.length) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 14.h),
+            child: const Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryBlue),
+              ),
+            ),
+          );
+        }
         final m = results[i];
         final isCurrent = currentUrl == m.previewUrl;
         return MusicListItem(
@@ -55,3 +72,4 @@ class MusicSearchResultsList extends StatelessWidget {
     );
   }
 }
+
