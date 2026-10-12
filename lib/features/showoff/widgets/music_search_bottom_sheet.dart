@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import '../controllers/feed_audio_controller.dart';
 import '../services/music_service.dart';
 import 'music_search_header.dart';
 import 'music_search_results_list.dart';
@@ -16,8 +18,8 @@ class MusicSearchBottomSheet extends StatefulWidget {
 }
 
 class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
-  final TextEditingController _searchController = TextEditingController();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final _searchController = TextEditingController();
+  final _audioPlayer = AudioPlayer();
   StreamSubscription<PlayerState>? _playerSub;
   Timer? _debounce;
   List<MusicModel> _searchResults = [];
@@ -29,14 +31,13 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _playerSub = _audioPlayer.playerStateStream.listen((state) {
+    if (Get.isRegistered<FeedAudioController>()) Get.find<FeedAudioController>().pauseMusic();
+    _search();
+    _playerSub = _audioPlayer.playerStateStream.listen((s) {
       if (!mounted) return;
-      final playing = state.playing && state.processingState != ProcessingState.completed;
-      final buffering = state.processingState == ProcessingState.buffering ||
-          state.processingState == ProcessingState.loading;
       setState(() {
-        _isPlaying = playing;
-        _isBuffering = buffering;
+        _isPlaying = s.playing && s.processingState != ProcessingState.completed;
+        _isBuffering = s.processingState == ProcessingState.buffering || s.processingState == ProcessingState.loading;
       });
     });
   }
@@ -50,16 +51,15 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
     super.dispose();
   }
 
-  void _onQueryChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () => _search(query));
+  void _onQueryChanged(String q) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () => _search(q));
   }
 
-  Future<void> _search(String query) async {
-    if (query.trim().isEmpty) return setState(() => _searchResults = []);
+  Future<void> _search([String? q]) async {
     setState(() => _isLoading = true);
-    final results = await MusicService.searchMusic(query.trim());
-    if (mounted) setState(() { _searchResults = results; _isLoading = false; });
+    final res = await MusicService.searchMusic(q);
+    if (mounted) setState(() { _searchResults = res; _isLoading = false; });
   }
 
   Future<void> _togglePlay(String url) async {
@@ -72,13 +72,12 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
         _audioPlayer.play();
       }
     } catch (e) {
-      debugPrint('Audio playback error: $e');
+      debugPrint('Audio error: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
@@ -94,8 +93,8 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
             onChanged: _onQueryChanged,
             onClear: () {
               _searchController.clear();
-              setState(() => _searchResults = []);
               _audioPlayer.stop();
+              _search();
             },
           ),
           SizedBox(height: 6.h),
@@ -119,4 +118,3 @@ class _MusicSearchBottomSheetState extends State<MusicSearchBottomSheet> {
     );
   }
 }
-

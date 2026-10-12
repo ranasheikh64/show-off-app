@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:frontend/core/constants/api_url.dart';
 
 import '../../../core/network/dio_client.dart';
@@ -35,35 +36,28 @@ class MusicModel {
 class MusicService {
   static final Dio _dio = DioClient.instance;
 
-  static Future<List<MusicModel>> searchMusic(String query) async {
+  static Future<List<MusicModel>> searchMusic([String? query]) async {
     try {
-      print('=== [Flutter] MusicService: Searching for "$query" ===');
-      if (query.trim().isEmpty) return [];
-
-      print('=== [Flutter] API URL: ${ApiUrl.searchMusic} ===');
+      final hasQuery = query != null && query.trim().isNotEmpty;
       final response = await _dio.get(
         ApiUrl.searchMusic,
-        queryParameters: {'query': query.trim()},
+        queryParameters: hasQuery ? {'query': query.trim()} : null,
       );
 
-      print('=== [Flutter] Music Search Response Status Code: ${response.statusCode} ===');
-      print('=== [Flutter] Music Search Response Data: ${response.data} ===');
-
       if (response.data != null && response.data['success'] == true) {
-        final List<dynamic> data = response.data['data'];
-        print('=== [Flutter] Parsed ${data.length} music tracks. ===');
+        final List<dynamic> data = response.data['data'] ?? [];
         return data.map((json) => MusicModel.fromJson(json)).toList();
-      } else {
-        print('=== [Flutter] Success flag is false or data is null ===');
       }
       return [];
     } catch (e) {
       if (e is DioException) {
-        print('=== [Flutter] Dio Error searching music: ${e.response?.statusCode} - ${e.response?.data} ===');
+        debugPrint('=== [Flutter] Dio Error searching music: ${e.response?.statusCode} - ${e.response?.data} ===');
       } else {
-        print('=== [Flutter] General Error searching music: $e ===');
+        debugPrint('=== [Flutter] General Error searching music: $e ===');
       }
       return [];
     }
+
   }
+
 }
