@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/constants/app_theme.dart';
 import '../controllers/showoff_controller.dart';
+import '../controllers/feed_audio_controller.dart';
 import '../widgets/create_media_grid.dart';
 import '../widgets/create_upload_progress.dart';
 import '../services/music_service.dart';
@@ -27,6 +28,14 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
   final List<File> _images = [];
   bool _isPicking = false;
   MusicModel? _selectedMusic;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Get.isRegistered<FeedAudioController>()) {
+      Get.find<FeedAudioController>().pauseMusic();
+    }
+  }
 
   Future<void> _pickImages() async {
     if (_isPicking) return;
