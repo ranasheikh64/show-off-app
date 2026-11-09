@@ -116,9 +116,13 @@ class ChatController extends GetxController {
   final Set<String> _processedMessageIds = {};
 
   void _listenToSocketEvents() {
-    SocketService.on('new_message', (data) {
+    void handleIncomingNewMessage(dynamic data) {
+      print('📥 [Socket] Received incoming message data: $data');
       final msg = MessageModel.fromJson(data);
-      if (_processedMessageIds.contains(msg.id)) return;
+      if (_processedMessageIds.contains(msg.id)) {
+        print('⚠️ [Socket] Message already processed: ${msg.id}');
+        return;
+      }
       _processedMessageIds.add(msg.id);
       if (_processedMessageIds.length > 500) _processedMessageIds.clear();
 
@@ -150,11 +154,16 @@ class ChatController extends GetxController {
       }
 
       if (activeChatId.value == chatId) {
+        print('✅ [Socket] Adding message to current messages UI');
         currentMessages.insert(0, msg);
       }
 
+      print('✅ [Socket] Updating chat list UI');
       _updateChatListLatestMessage(chatId, msg, isNewMessage: true);
-    });
+    }
+
+    SocketService.on('new_message', handleIncomingNewMessage);
+    SocketService.on('new_message_notification', handleIncomingNewMessage);
 
     SocketService.on('message_seen', (data) {
       final String msgId = data['_id'] ?? data['id'];
@@ -367,6 +376,27 @@ class ChatController extends GetxController {
       } else {
         isLoading.value = false;
       }
+    }
+  }
+
+  Future<void> createGroupChat(String name, List<String> userIds) async {
+    try {
+      isLoading.value = true;
+      final newChat = await _apiService.createGroupChat(name, userIds);
+      chats.insert(0, newChat);
+      SocketService.joinChat(newChat.id); // Join the socket room for the new group
+      MyApp.scaffoldMessengerKey.currentState?.showSnackBar(
+        const SnackBar(
+          content: Text('Group created successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      MyApp.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text('Failed to create group: $e')),
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -601,6 +631,7 @@ class ChatController extends GetxController {
 
   void sendMessage(String chatId, String content) {
     if (content.isEmpty) return;
+    print('📤 [Socket] Sending message to chatId: $chatId');
     final encrypted = EncryptionUtil.encrypt(content);
     SocketService.emit('send_message', {
       'chatId': chatId,

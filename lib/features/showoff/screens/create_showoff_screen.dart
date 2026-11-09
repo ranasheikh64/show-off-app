@@ -9,8 +9,11 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/constants/app_theme.dart';
 import '../controllers/showoff_controller.dart';
+import '../controllers/feed_audio_controller.dart';
 import '../widgets/create_media_grid.dart';
 import '../widgets/create_upload_progress.dart';
+import '../services/music_service.dart';
+import '../widgets/music_search_bottom_sheet.dart';
 
 class CreateShowOffScreen extends StatefulWidget {
   const CreateShowOffScreen({super.key});
@@ -24,6 +27,15 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
   final _picker = ImagePicker();
   final List<File> _images = [];
   bool _isPicking = false;
+  MusicModel? _selectedMusic;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Get.isRegistered<FeedAudioController>()) {
+      Get.find<FeedAudioController>().pauseMusic();
+    }
+  }
 
   Future<void> _pickImages() async {
     if (_isPicking) return;
@@ -62,12 +74,25 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
 
   void _remove(int i) => setState(() => _images.removeAt(i));
 
+  void _reorder(int oldIndex, int newIndex) {
+    if (oldIndex == newIndex) return;
+    setState(() {
+      final item = _images.removeAt(oldIndex);
+      _images.insert(newIndex, item);
+    });
+  }
+
   Future<void> _post() async {
     if (_images.isEmpty) {
       _showSnack('Please select at least one photo ✨', isError: true);
       return;
     }
-    final ok = await _ctrl.createPost(_images.map((e) => e.path).toList());
+    final ok = await _ctrl.createPost(
+      _images.map((e) => e.path).toList(),
+      musicUrl: _selectedMusic?.previewUrl,
+      musicTitle: _selectedMusic?.title,
+      musicArtist: _selectedMusic?.artist,
+    );
     if (!mounted) return;
     if (ok) {
       _showSnack('Posted successfully! 🎉');
@@ -102,11 +127,13 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
             _buildAppBar(),
             SliverToBoxAdapter(child: _buildHeader()),
             SliverToBoxAdapter(child: _buildHint()),
+            SliverToBoxAdapter(child: _buildMusicSelector()),
             SliverFillRemaining(
               child: CreateMediaGrid(
                 images: _images,
                 onAddTap: _pickImages,
                 onRemove: _remove,
+                onReorder: _reorder,
               ),
             ),
           ],
@@ -114,6 +141,7 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
       }),
     );
   }
+
 
   Widget _buildAppBar() {
     return SliverAppBar(
@@ -189,11 +217,85 @@ class _CreateShowOffScreenState extends State<CreateShowOffScreen> {
         children: [
           Icon(Icons.info_outline_rounded, size: 16.sp, color: Colors.white70),
           SizedBox(width: 6.w),
-          Text(
-            'First photo will be your cover · Tap + to add more',
-            style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+          Expanded(
+            child: Text(
+              'First photo is cover · Long press & drag to reorder ✨',
+              style: TextStyle(fontSize: 12.sp, color: Colors.white70),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+
+  Widget _buildMusicSelector() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+      child: InkWell(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => MusicSearchBottomSheet(
+              onMusicSelected: (music) {
+                setState(() => _selectedMusic = music);
+              },
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+
+          child: Row(
+            children: [
+              Icon(Icons.music_note_rounded, color: AppTheme.primaryBlue, size: 24.sp),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selectedMusic != null ? _selectedMusic!.title : 'Add Music',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (_selectedMusic != null) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        _selectedMusic!.artist,
+                        style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ]
+                  ],
+                ),
+              ),
+              if (_selectedMusic != null)
+                IconButton(
+                  icon: Icon(Icons.close, color: Colors.white70, size: 20.sp),
+                  onPressed: () {
+                    setState(() => _selectedMusic = null);
+                  },
+                )
+              else
+                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16.sp),
+            ],
+          ),
+        ),
       ),
     );
   }

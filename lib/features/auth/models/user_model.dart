@@ -18,6 +18,8 @@ class UserModel {
   final int postsCount;
   final int lovedByCount;
   final int matchedCount;
+  final bool hasAcceptedPrivacyPolicy;
+  final bool notificationsEnabled;
 
   UserModel({
     required this.id,
@@ -38,6 +40,8 @@ class UserModel {
     this.postsCount = 0,
     this.lovedByCount = 0,
     this.matchedCount = 0,
+    this.hasAcceptedPrivacyPolicy = false,
+    this.notificationsEnabled = true,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -60,6 +64,8 @@ class UserModel {
       postsCount: json['postsCount'] ?? 0,
       lovedByCount: json['lovedByCount'] ?? 0,
       matchedCount: json['matchedCount'] ?? 0,
+      hasAcceptedPrivacyPolicy: json['hasAcceptedPrivacyPolicy'] ?? false,
+      notificationsEnabled: json['notificationsEnabled'] ?? true,
     );
   }
 
@@ -83,6 +89,8 @@ class UserModel {
       'postsCount': postsCount,
       'lovedByCount': lovedByCount,
       'matchedCount': matchedCount,
+      'hasAcceptedPrivacyPolicy': hasAcceptedPrivacyPolicy,
+      'notificationsEnabled': notificationsEnabled,
     };
   }
 }

@@ -93,7 +93,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 1080,
+      maxHeight: 1080,
+    );
     if (image != null) {
       _chatCtrl.sendMediaMessage(widget.chatId, image.path);
     }

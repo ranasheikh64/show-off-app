@@ -116,7 +116,7 @@ class ShowOffController extends GetxController {
     }
   }
 
-  Future<bool> createPost(List<String> filePaths) async {
+  Future<bool> createPost(List<String> filePaths, {String? musicUrl, String? musicTitle, String? musicArtist}) async {
     isUploading.value = true;
     uploadProgress.value = 0.0;
     try {
@@ -142,9 +142,14 @@ class ShowOffController extends GetxController {
         uploadedUrls.add(response.data['url']);
       }
 
+      final Map<String, dynamic> payload = {'images': uploadedUrls};
+      if (musicUrl != null) payload['musicUrl'] = musicUrl;
+      if (musicTitle != null) payload['musicTitle'] = musicTitle;
+      if (musicArtist != null) payload['musicArtist'] = musicArtist;
+
       final response = await _apiService.post(
         ApiUrl.showOff,
-        data: {'images': uploadedUrls},
+        data: payload,
       );
       if (response.data['success']) {
         final newPost = ShowOffModel.fromJson(response.data['data']);
@@ -217,6 +222,40 @@ class ShowOffController extends GetxController {
     } catch (e) {
       print('Error deleting post: $e');
       return false;
+    }
+  }
+
+  Future<String?> reportPost(String postId) async {
+    try {
+      final response = await _apiService.post(ApiUrl.showOffReportById(postId));
+      if (response.data['success']) {
+        if (response.data['deleted'] == true) {
+          // Post was deleted because of too many reports
+          feedPosts.removeWhere((p) => p.id == postId);
+        } else {
+          // Update the reportedBy list locally
+          for (var i = 0; i < feedPosts.length; i++) {
+            if (feedPosts[i].id == postId) {
+              final updatedReportedBy = List<String>.from(feedPosts[i].reportedBy);
+              final userId = Get.find<AuthController>().currentUser.value?.id;
+              if (userId != null && !updatedReportedBy.contains(userId)) {
+                updatedReportedBy.add(userId);
+              }
+              feedPosts[i] = feedPosts[i].copyWith(reportedBy: updatedReportedBy);
+            }
+          }
+        }
+        return null; // Success
+      }
+      return 'Unable to report post';
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        return e.response?.data['message'] ?? 'Unable to report post';
+      }
+      return 'An error occurred. Please try again.';
+    } catch (e) {
+      print('Error reporting post: $e');
+      return 'An error occurred. Please try again.';
     }
   }
 }

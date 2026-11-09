@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({Key? key}) : super(key: key);
@@ -64,11 +65,31 @@ class HelpSupportScreen extends StatelessWidget {
               answer: 'Go to the Profile tab and tap on "Edit Profile" or the pen icon on the top right corner.',
             ),
             _buildFAQItem(
+              question: 'How do I report a user or inappropriate content?',
+              answer: 'We have a strict Zero Tolerance policy. You can report any user directly from their profile or post. Our moderation team will take immediate action against explicitly violent or inappropriate content.',
+            ),
+            _buildFAQItem(
+              question: 'How do I delete my account?',
+              answer: 'You can permanently delete your account and all associated data from the "Settings" > "Delete Account" menu. This action cannot be undone.',
+            ),
+            _buildFAQItem(
               question: 'Is my data secure?',
               answer: 'Yes, we take security very seriously and encrypt sensitive information to ensure your privacy.',
             ),
             SizedBox(height: 32.h),
             _buildContactSection(),
+            SizedBox(height: 32.h),
+            _buildQuickLinks(context),
+            SizedBox(height: 24.h),
+            Center(
+              child: Text(
+                'Version 1.0.0 (Build 12)',
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 12.sp,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -166,6 +187,66 @@ class HelpSupportScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickLinks(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Links',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        _buildLinkItem(
+          icon: Icons.privacy_tip_rounded,
+          title: 'Privacy Policy',
+          onTap: () => context.push('/profile/privacy-policy'),
+        ),
+        SizedBox(height: 12.h),
+        _buildLinkItem(
+          icon: Icons.description_rounded,
+          title: 'Terms of Service',
+          onTap: () => context.push('/profile/privacy-policy'), // Re-using privacy policy screen for now
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLinkItem({required IconData icon, required String title, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFFFF4D8D), size: 24.sp),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16.sp),
+          ],
+        ),
+      ),
     );
   }
 }

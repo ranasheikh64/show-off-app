@@ -17,22 +17,41 @@ class SocketService {
         .build());
 
     _socket?.onConnect((_) {
-      print('=== Socket Connected ===');
+      print('🟢 === Socket Connected Successfully ===');
+      print('Socket ID: ${_socket?.id}');
     });
 
-    _socket?.onDisconnect((_) {
-      print('=== Socket Disconnected ===');
+    _socket?.onDisconnect((reason) {
+      print('🔴 === Socket Disconnected ===');
+      print('Reason: $reason');
     });
 
     _socket?.onConnectError((err) {
-      print('=== Socket Connect Error ===');
+      print('❌ === Socket Connect Error ===');
       print('Error details: $err');
       print('Attempted URL: ${ApiUrl.socketUrl}');
     });
 
     _socket?.onError((err) {
-      print('=== Socket General Error ===');
+      print('⚠️ === Socket General Error ===');
       print('Error details: $err');
+    });
+
+    _socket?.onReconnect((attempt) {
+      print('🔄 === Socket Reconnected === (Attempt: $attempt)');
+    });
+
+    _socket?.onReconnectAttempt((attempt) {
+      print('⏳ === Socket Reconnecting... === (Attempt: $attempt)');
+    });
+
+    _socket?.onReconnectError((err) {
+      print('❌ === Socket Reconnect Error ===');
+      print('Error: $err');
+    });
+
+    _socket?.onReconnectFailed((_) {
+      print('🛑 === Socket Reconnect Failed ===');
     });
   }
 
