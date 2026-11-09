@@ -13,7 +13,7 @@ import '../widgets/showoff_post_card.dart';
 import 'create_showoff_screen.dart';
 
 class ShowOffFeedScreen extends StatefulWidget {
-  const ShowOffFeedScreen({Key? key}) : super(key: key);
+  const ShowOffFeedScreen({super.key});
 
   @override
   State<ShowOffFeedScreen> createState() => _ShowOffFeedScreenState();
