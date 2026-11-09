@@ -51,7 +51,7 @@ class _ProfileView extends StatelessWidget {
                   SizedBox(height: 24.h),
                   _buildStatsRow(context, user),
                   SizedBox(height: 32.h),
-                  _buildMenuSection(context, authCtrl),
+                  _buildMenuSection(context, authCtrl, user),
                   SizedBox(height: 40.h),
                 ],
               ),
@@ -354,7 +354,7 @@ class _ProfileView extends StatelessWidget {
     return Container(width: 1, height: 40.h, color: Colors.white12);
   }
 
-  Widget _buildMenuSection(BuildContext context, AuthController authCtrl) {
+  Widget _buildMenuSection(BuildContext context, AuthController authCtrl, UserModel user) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -391,7 +391,13 @@ class _ProfileView extends StatelessWidget {
               _menuTile(
                 icon: Icons.notifications_none_rounded,
                 label: 'Notifications',
-                onTap: () {},
+                trailing: Switch(
+                  value: user.notificationsEnabled,
+                  onChanged: (value) {
+                    authCtrl.updateProfile({'notificationsEnabled': value}, context);
+                  },
+                  activeColor: const Color(0xFFFF4D8D),
+                ),
               ),
             ],
           ),
@@ -505,6 +511,78 @@ class _ProfileView extends StatelessWidget {
               ),
             ),
           ),
+          SizedBox(height: 16.h),
+          // Delete account button
+          GestureDetector(
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  backgroundColor: const Color(0xFF1A1040),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  title: const Text(
+                    'Delete Account',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  content: const Text(
+                    'Are you sure you want to permanently delete your account? This action cannot be undone.',
+                    style: TextStyle(color: Colors.white60),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(
+                          color: Color(0xFFFF4D8D),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                authCtrl.deleteAccount(context);
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.red.withOpacity(0.5)),
+                borderRadius: BorderRadius.circular(16.r),
+                color: Colors.red.withOpacity(0.1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.delete_forever_rounded, color: Colors.red),
+                  SizedBox(width: 10.w),
+                  Text(
+                    'Delete Account',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -524,7 +602,8 @@ class _ProfileView extends StatelessWidget {
   Widget _menuTile({
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
+    Widget? trailing,
   }) {
     return InkWell(
       onTap: onTap,
@@ -552,7 +631,7 @@ class _ProfileView extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(
+            trailing ?? Icon(
               Icons.chevron_right_rounded,
               color: Colors.white24,
               size: 20.sp,

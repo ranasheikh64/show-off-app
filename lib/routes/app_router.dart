@@ -18,6 +18,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import '../core/storage/hive_service.dart';
 import '../features/showoff/screens/showoff_feed_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
+import '../features/profile/screens/privacy_policy_screen.dart';
 
 String getInitialRoute() {
   final token = HiveService.getToken();
@@ -87,6 +88,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/profile/privacy-policy',
+      builder: (context, state) => const PrivacyPolicyScreen(),
     ),
   ],
 );

@@ -56,4 +56,12 @@ class ChatApiService {
     });
     return response.data;
   }
+
+  Future<ChatModel> createGroupChat(String groupName, List<String> userIds) async {
+    final response = await _dio.post(ApiUrl.createGroup, data: {
+      'chatName': groupName,
+      'users': userIds,
+    });
+    return ChatModel.fromJson(response.data['chat']);
+  }
 }

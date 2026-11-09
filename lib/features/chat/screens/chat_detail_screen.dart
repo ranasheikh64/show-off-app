@@ -716,28 +716,27 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       children: [
                         CircleAvatar(
                           radius: 20.r,
-                          backgroundColor: const Color(
-                            0xFF91A3F4,
-                          ), // Light blue-purple like in screenshot
-                          backgroundImage:
-                              (otherUser?.profileImage != null &&
+                          backgroundColor: const Color(0xFF91A3F4), // Light blue-purple like in screenshot
+                          backgroundImage: (chat?.isGroupChat != true &&
+                                  otherUser?.profileImage != null &&
                                   otherUser!.profileImage!.isNotEmpty)
                               ? NetworkImage(otherUser.profileImage!)
                               : null,
-                          child:
-                              (otherUser?.profileImage != null &&
-                                  otherUser!.profileImage!.isNotEmpty)
-                              ? null
-                              : Text(
-                                  _getInitials(widget.chatName),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                          child: (chat?.isGroupChat == true)
+                              ? Icon(Icons.group, color: Colors.white, size: 24.r)
+                              : ((otherUser?.profileImage != null &&
+                                      otherUser!.profileImage!.isNotEmpty)
+                                  ? null
+                                  : Text(
+                                      _getInitials(widget.chatName),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )),
                         ),
-                        if (otherUser != null && otherUser.isOnline)
+                        if (chat?.isGroupChat != true && otherUser != null && otherUser.isOnline)
                           Positioned(
                             right: 0,
                             bottom: 0,
@@ -762,14 +761,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            widget.chatName,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  widget.chatName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (chat?.isGroupChat == true)
+                                Padding(
+                                  padding: EdgeInsets.only(left: 4.w),
+                                  child: Icon(Icons.group, color: Colors.white54, size: 16.sp),
+                                ),
+                            ],
                           ),
                           if (otherUser != null)
                             Text(
